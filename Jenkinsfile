@@ -75,37 +75,31 @@ pipeline {
             }
         }
 
-        stage("Quality Assurance") {
-            agent {
-                docker {
-                    image 'sonarsource/sonar-scanner-cli'
-                    args '--network=devops-infra_default'
-                    reuseNode true
-                }
-            }
-
-            stages {
-                stage("SonarQube analysis") {
-                    steps {
-                        withSonarQubeEnv('sonarqube') {
-                            sh 'sonar-scanner'
-                        }
-                    }
-                }
-
-                stage("Quality Gate") {
-                    steps {
-                        script {
-                            def qualityGate = waitForQualityGate()
-
-                            if (qualityGate.status != 'OK') {
-                                error "La puerta de calidad ha fallado: ${qualityGate.status}"
-                            }
-                        }
-                    }
-                }
-            }
+ stage("Quality Assurance") {
+    steps {
+        withSonarQubeEnv('sonarqube') {
+            sh """
+            sonar-scanner \
+              -Dsonar.projectKey=curso-devops-lab3 \
+              -Dsonar.sources=src \
+              -Dsonar.tests=test \
+              -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
+            """
         }
+    }
+}
+
+        stage("Quality Gate") {
+             steps {
+                script {
+                def qualityGate = waitForQualityGate()
+
+                if (qualityGate.status != 'OK') {
+                error "La puerta de calidad ha fallado: ${qualityGate.status}"
+                }
+        }
+    }
+}
 
         stage("CD - build y push de imagen") {
             steps {
