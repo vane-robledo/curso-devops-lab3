@@ -75,12 +75,20 @@ pipeline {
             }
         }
 
- stage("Quality Assurance") {
+        stage("Quality Assurance") {
+    agent {
+        docker {
+            image 'sonarsource/sonar-scanner-cli:5'
+            args '--network=devops-infra_default'
+            reuseNode true
+        }
+    }
     steps {
         withSonarQubeEnv('sonarqube') {
             sh """
             sonar-scanner \
               -Dsonar.projectKey=curso-devops-lab3 \
+              -Dsonar.projectName=curso-devops-lab3 \
               -Dsonar.sources=src \
               -Dsonar.tests=test \
               -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
