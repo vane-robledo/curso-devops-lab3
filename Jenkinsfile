@@ -78,7 +78,7 @@ pipeline {
         stage("Quality Assurance") {
     agent {
         docker {
-            image 'sonarsource/sonar-scanner-cli:5'
+            image 'node:24'
             args '--network=devops-infra_default'
             reuseNode true
         }
@@ -86,7 +86,10 @@ pipeline {
     steps {
         withSonarQubeEnv('sonarqube') {
             sh """
+            npm install -g sonarqube-scanner
             sonar-scanner \
+              -Dsonar.host.url=http://sonarqube:9000 \
+              -Dsonar.login=$SONAR_AUTH_TOKEN \
               -Dsonar.projectKey=curso-devops-lab3 \
               -Dsonar.projectName=curso-devops-lab3 \
               -Dsonar.sources=src \
@@ -96,6 +99,7 @@ pipeline {
         }
     }
 }
+        
 
         stage("Quality Gate") {
              steps {
